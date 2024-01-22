@@ -23,6 +23,7 @@ except with an additional rule: if the first character of the result is a digit
 MARKDOWN
         might_fail => 0,
         args => {
+            allow_multiple_exts => {schema=>'bool*'},
         },
         examples => [
             {value => '', filtered_value => ''},
@@ -30,6 +31,7 @@ MARKDOWN
             {value => '123  456-789.foo.bar', filtered_value => '_123_456_789_foo.bar'},
             {value => 'a123  456-789.foo.bar', filtered_value => 'a123_456_789_foo.bar'},
             {value => '__123  456-789.foo.bar', filtered_value => '__123_456_789_foo.bar'},
+            {value => '__123  456-789.foo.bar', filter_args=>{allow_multiple_exts=>1}, filtered_value => '__123_456_789.foo.bar'},
         ],
     };
 }
@@ -44,7 +46,7 @@ sub filter {
     $res->{expr_filter} = join(
         "",
         "do { ", (
-            "my \$tmp = $dt; my \$ext; \$tmp =~ s/\\.(\\w+)\\z// and \$ext = \$1; \$tmp =~ s/[^A-Za-z0-9_]+/_/g; \$tmp = \"_\$tmp\" if \$tmp =~ /\\A[0-9]/; defined(\$ext) ? \"\$tmp.\$ext\" : \$tmp",
+            "my \$tmp = $dt; my \$ext; \$tmp =~ ".($gen_args->{allow_multiple_exts} ? "s/\\.(\\w+(?:\\.\\w+)*)\\z//" : "s/\\.(\\w+)\\z//")." and \$ext = \$1; \$tmp =~ s/[^A-Za-z0-9_]+/_/g; \$tmp = \"_\$tmp\" if \$tmp =~ /\\A[0-9]/; defined(\$ext) ? \"\$tmp.\$ext\" : \$tmp",
         ), "}",
     );
 
